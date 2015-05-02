@@ -121,6 +121,85 @@ PATENT RIGHTS GRANT:
 
 #define TOKU_METADB_NAME "tokudb_meta"
 
+typedef unsigned int    pfs_key_t; 
+
+extern pfs_key_t txn_manager_lock_mutex_key;
+extern pfs_key_t kibbutz_mutex_key;
+extern pfs_key_t ft_ref_lock_mutex_key;
+extern pfs_key_t txn_lock_mutex_key;
+extern pfs_key_t txn_state_lock_mutex_key;
+extern pfs_key_t rollback_log_node_cache_mutex_key;
+extern pfs_key_t txn_child_manager_mutex_key;
+extern pfs_key_t block_allocator_trace_lock_mutex_key;
+extern pfs_key_t block_table_mutex_key;
+extern pfs_key_t ft_open_close_lock_mutex_key;
+extern pfs_key_t bjm_jobs_lock_mutex_key;
+extern pfs_key_t checkpoint_safe_mutex_key;
+extern pfs_key_t bfs_mutex_key;
+extern pfs_key_t loader_error_mutex_key;
+extern pfs_key_t loader_bl_mutex_key;
+extern pfs_key_t loader_fi_lock_mutex_key;
+extern pfs_key_t loader_out_mutex_key;
+extern pfs_key_t result_output_condition_lock_mutex_key;
+extern pfs_key_t manager_mutex_key;
+extern pfs_key_t manager_escalation_mutex_key;
+extern pfs_key_t manger_escalator_mutex_key;
+extern pfs_key_t locktree_request_info_mutex_key;
+extern pfs_key_t indexer_i_indexer_lock_mutex_key;
+extern pfs_key_t indexer_i_indexer_estimate_lock_mutex_key;
+extern pfs_key_t db_txn_struct_i_txn_mutex_key;
+extern pfs_key_t minicron_p_mutex_key;
+extern pfs_key_t queue_result_mutex_key;
+extern pfs_key_t tpool_lock_mutex_key;
+extern pfs_key_t cachetable_m_mutex_key;
+extern pfs_key_t cachetable_ev_thread_lock_mutex_key;
+
+//extern pfs_key_t circular_buffer_m_lock_mutex_key;
+//extern pfs_key_t treenode_mutex_key;
+//extern pfs_key_t log_internal_lock_mutex_key;
+//extern pfs_key_t workset_lock_mutex_key;
+//extern pfs_key_t cleaner_attr_mutex_mutex_key;
+
+
+static PSI_mutex_info   all_tokudb_mutexes[] = {
+        {&txn_manager_lock_mutex_key, "txn_manager_lock_mutex", 0},
+        {&kibbutz_mutex_key, "kibbutz_mutex", 0},
+        {&ft_ref_lock_mutex_key, "ft_ref_lock_mutex", 0},
+        {&txn_lock_mutex_key, "txn_lock_mutex", 0},
+        {&txn_state_lock_mutex_key, "txn_state_lock_mutex", 0},
+        {&rollback_log_node_cache_mutex_key, "rollback_log_node_cache_mutex", 0},
+        {&txn_child_manager_mutex_key, "txn_child_manager_mutex", 0},
+        {&block_allocator_trace_lock_mutex_key, "block_allocator_trace_lock_mutex", 0},
+        {&block_table_mutex_key, "block_table_mutex", 0},
+#if 0
+        {&workset_lock_mutex_key, "workset_lock_mutex", 0},
+        {&log_internal_lock_mutex_key, "log_internal_lock_mutex", 0},
+        {&circular_buffer_m_lock_mutex_key, "circular_buffer_m_lock_mutex", 0},
+        {&treenode_mutex_key, "treenode_mutex", 0},
+#endif
+        {&ft_open_close_lock_mutex_key, "ft_open_close_lock_mutex", 0},
+        {&bjm_jobs_lock_mutex_key, "bjm_jobs_lock_mutex", 0},
+        {&checkpoint_safe_mutex_key, "checkpoint_safe_mutex", 0},
+        {&bfs_mutex_key, "bfs_mutex", 0},
+        {&loader_error_mutex_key, "loader_error_mutex", 0},
+        {&loader_bl_mutex_key, "loader_bl_mutex", 0},
+        {&loader_fi_lock_mutex_key, "loader_fi_lock_mutex", 0},
+        {&loader_out_mutex_key, "loader_out_mutex", 0},
+        {&result_output_condition_lock_mutex_key,"result_output_condition_lock_mutex", 0},
+        {&manager_mutex_key, "manager_mutex", 0},
+        {&manager_escalation_mutex_key, "manager_escalation_mutex", 0},
+        {&manger_escalator_mutex_key, "manager_escalator_mutex", 0},   
+        {&locktree_request_info_mutex_key, "locktree_request_info_mutex", 0},
+        {&indexer_i_indexer_lock_mutex_key, "indexer_i_indexer_lock_mutex", 0},
+        {&indexer_i_indexer_estimate_lock_mutex_key,   "indexer_i_indexer_estimate_lock_mutex", 0},
+        {&db_txn_struct_i_txn_mutex_key, "db_txn_struct_i_txn_mutex", 0},
+        {&minicron_p_mutex_key, "minicron_p_mutex", 0},
+        {&queue_result_mutex_key, "queue_result_mutex", 0},
+        {&tpool_lock_mutex_key, "tpool_lock__mutex", 0},   
+        {&cachetable_m_mutex_key, "cachetable_m_mutex", 0},
+        {&cachetable_ev_thread_lock_mutex_key, "cachetable_ev_thread_lock_mutex", 0}
+};
+
 typedef struct savepoint_info {
     DB_TXN* txn;
     tokudb_trx_data* trx;
@@ -367,6 +446,14 @@ static int tokudb_init_func(void *p) {
         sql_print_error("%s can not set product name error %d", tokudb_hton_name, r);
         goto error;
     }
+
+#ifdef HAVE_PSI_INTERFACE
+    /* Register TokuDB mutex keys with MySQL performance schema */
+    int     count;
+
+    count = array_elements(all_tokudb_mutexes);
+    mysql_mutex_register("tokudb", all_tokudb_mutexes, count);
+# endif /* HAVE_PSI_INTERFACE */
 
     tokudb_pthread_mutex_init(&tokudb_mutex, MY_MUTEX_INIT_FAST);
     (void) my_hash_init(&tokudb_open_tables, table_alias_charset, 32, 0, 0, (my_hash_get_key) tokudb_get_key, 0, 0);
