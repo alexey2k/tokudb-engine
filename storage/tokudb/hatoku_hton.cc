@@ -154,12 +154,51 @@ extern pfs_key_t tpool_lock_mutex_key;
 extern pfs_key_t cachetable_m_mutex_key;
 extern pfs_key_t cachetable_ev_thread_lock_mutex_key;
 
-//extern pfs_key_t circular_buffer_m_lock_mutex_key;
-//extern pfs_key_t treenode_mutex_key;
-//extern pfs_key_t log_internal_lock_mutex_key;
-//extern pfs_key_t workset_lock_mutex_key;
-//extern pfs_key_t cleaner_attr_mutex_mutex_key;
+extern pfs_key_t result_state_cond_key;
+extern pfs_key_t bjm_jobs_wait_key;  
+extern pfs_key_t cachetable_p_refcount_wait_key;
+extern pfs_key_t cachetable_m_flow_control_cond_key;
+extern pfs_key_t cachetable_m_ev_thread_cond_key;
+extern pfs_key_t bfs_cond_key;
+extern pfs_key_t result_output_condition_key;
+extern pfs_key_t manager_m_escalator_done_key;
+extern pfs_key_t lock_request_m_wait_cond_key;
+ 
 
+extern pfs_key_t queue_result_cond_key;
+
+extern pfs_key_t ws_worker_wait_key;
+extern pfs_key_t workset_lock_mutex_key;
+
+extern pfs_key_t rwlock_wait_read_key;  
+extern pfs_key_t rwlock_wait_write_key;
+extern pfs_key_t rwlock_cond_key;
+
+
+extern pfs_key_t tp_thread_wait_key;
+extern pfs_key_t tp_pool_wait_free_key;
+extern pfs_key_t frwlock_m_wait_read_key;
+extern pfs_key_t kibbutz_k_cond_key;
+
+extern pfs_key_t multi_operation_lock_key;
+extern pfs_key_t low_priority_multi_operation_lock_key;
+extern pfs_key_t cachetable_m_list_lock_key;   
+extern pfs_key_t cachetable_m_pending_lock_expensive_key;
+extern pfs_key_t cachetable_m_pending_lock_cheap_key;
+extern pfs_key_t cachetable_m_lock_key;
+extern pfs_key_t result_i_open_dbs_rwlock_key;
+
+extern pfs_key_t log_internal_lock_mutex_key;
+extern pfs_key_t probe_mutex_1_key;
+extern pfs_key_t probe_mutex_2_key;
+extern pfs_key_t probe_mutex_3_key;
+extern pfs_key_t probe_mutex_4_key;
+
+//extern pfs_key_t treenode_mutex_key;
+//extern pfs_key_t fmutex_cond_key;
+//extern pfs_key_t circular_buffer_m_lock_mutex_key;
+//extern pfs_key_t circular_buffer_m_push_cond_key;
+//extern pfs_key_t circular_buffer_m_pop_cond_key; 
 
 static PSI_mutex_info   all_tokudb_mutexes[] = {
         {&txn_manager_lock_mutex_key, "txn_manager_lock_mutex", 0},
@@ -171,9 +210,9 @@ static PSI_mutex_info   all_tokudb_mutexes[] = {
         {&txn_child_manager_mutex_key, "txn_child_manager_mutex", 0},
         {&block_allocator_trace_lock_mutex_key, "block_allocator_trace_lock_mutex", 0},
         {&block_table_mutex_key, "block_table_mutex", 0},
+        {&workset_lock_mutex_key, "workset_lock_mutex", 0},        
+        {&log_internal_lock_mutex_key, "log_internal_lock_mutex", 0},        
 #if 0
-        {&workset_lock_mutex_key, "workset_lock_mutex", 0},
-        {&log_internal_lock_mutex_key, "log_internal_lock_mutex", 0},
         {&circular_buffer_m_lock_mutex_key, "circular_buffer_m_lock_mutex", 0},
         {&treenode_mutex_key, "treenode_mutex", 0},
 #endif
@@ -197,8 +236,50 @@ static PSI_mutex_info   all_tokudb_mutexes[] = {
         {&queue_result_mutex_key, "queue_result_mutex", 0},
         {&tpool_lock_mutex_key, "tpool_lock__mutex", 0},   
         {&cachetable_m_mutex_key, "cachetable_m_mutex", 0},
-        {&cachetable_ev_thread_lock_mutex_key, "cachetable_ev_thread_lock_mutex", 0}
+        {&cachetable_ev_thread_lock_mutex_key, "cachetable_ev_thread_lock_mutex", 0},
+        {&probe_mutex_1_key,"probe_mutex_1",0},
+        {&probe_mutex_2_key,"probe_mutex_2",0},        
+        {&probe_mutex_3_key,"probe_mutex_3",0},
+        {&probe_mutex_4_key,"probe_mutex_4",0}
 };
+
+  
+static PSI_cond_info all_tokudb_conds[] = {
+            {&result_state_cond_key,"result_state_cond",0},
+            {&ws_worker_wait_key,"ws_worker_wait",0},
+            {&bjm_jobs_wait_key,"bjm_jobs_wait",0},  
+            {&cachetable_p_refcount_wait_key,"cachetable_p_refcount_wait",0},
+            {&cachetable_m_flow_control_cond_key,"cachetable_m_flow_control_cond",0},
+            {&cachetable_m_ev_thread_cond_key,"cachetable_m_ev_thread_cond",0},
+            {&bfs_cond_key,"bfs_cond",0},
+            {&result_output_condition_key,"result_output_condition",0},
+            {&manager_m_escalator_done_key,"manager_m_escalator_done",0},
+            {&lock_request_m_wait_cond_key,"lock_request_m_wait_cond",0},
+#if 0
+            {&circular_buffer_m_push_cond_key,"circular_buffer_m_push_cond",0},
+            {&circular_buffer_m_pop_cond_key,"circular_buffer_m_pop_cond",0},  
+            {&fmutex_cond_key,"fmutex_cond",0},
+#endif
+            {&queue_result_cond_key,"queue_result_cond",0},
+            {&rwlock_wait_read_key,"rwlock_wait_read",0},  
+            {&rwlock_wait_write_key,"rwlock_wait_write",0},
+            {&rwlock_cond_key,"rwlock_cond",0},
+            {&tp_thread_wait_key,"tp_thread_wait",0},
+            {&tp_pool_wait_free_key,"tp_pool_wait_free",0},
+            {&frwlock_m_wait_read_key,"frwlock_m_wait_read",0},
+            {&kibbutz_k_cond_key,"kibbutz_k_cond",0}
+};
+
+static PSI_rwlock_info all_tokudb_rwlocks[] = {
+            {&multi_operation_lock_key,"multi_operation_lock",0},
+            {&low_priority_multi_operation_lock_key,"low_priority_multi_operation_lock",0},
+            {&cachetable_m_list_lock_key,"cachetable_m_list_lock",0},   
+            {&cachetable_m_pending_lock_expensive_key,"cachetable_m_pending_lock_expensive",0},
+            {&cachetable_m_pending_lock_cheap_key,"cachetable_m_pending_lock_cheap",0},
+            {&cachetable_m_lock_key,"cachetable_m_lock_key",0},
+            {&result_i_open_dbs_rwlock_key,"result_i_open_dbs_rwlock",0}
+};
+
 
 typedef struct savepoint_info {
     DB_TXN* txn;
@@ -453,6 +534,12 @@ static int tokudb_init_func(void *p) {
 
     count = array_elements(all_tokudb_mutexes);
     mysql_mutex_register("tokudb", all_tokudb_mutexes, count);
+    
+    count = array_elements(all_tokudb_rwlocks);
+    mysql_rwlock_register("tokudb", all_tokudb_rwlocks, count);    
+
+    count = array_elements(all_tokudb_conds);
+    mysql_cond_register("tokudb", all_tokudb_conds, count);
 # endif /* HAVE_PSI_INTERFACE */
 
     tokudb_pthread_mutex_init(&tokudb_mutex, MY_MUTEX_INIT_FAST);
