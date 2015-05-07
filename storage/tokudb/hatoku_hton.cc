@@ -535,11 +535,11 @@ static int tokudb_init_func(void *p) {
     count = array_elements(all_tokudb_mutexes);
     mysql_mutex_register("tokudb", all_tokudb_mutexes, count);
     
-    count = array_elements(all_tokudb_rwlocks);
-    mysql_rwlock_register("tokudb", all_tokudb_rwlocks, count);    
+//    count = array_elements(all_tokudb_rwlocks);
+//    mysql_rwlock_register("tokudb", all_tokudb_rwlocks, count);    
 
-    count = array_elements(all_tokudb_conds);
-    mysql_cond_register("tokudb", all_tokudb_conds, count);
+//    count = array_elements(all_tokudb_conds);
+//    mysql_cond_register("tokudb", all_tokudb_conds, count);
 # endif /* HAVE_PSI_INTERFACE */
 
     tokudb_pthread_mutex_init(&tokudb_mutex, MY_MUTEX_INIT_FAST);
