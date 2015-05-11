@@ -495,25 +495,69 @@ static inline void* tokudb_my_multi_malloc(myf myFlags, ...) {
   return start;
 }
 
-static inline void tokudb_pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr) {
+#if defined(HAVE_PSI_RWLOCK_INTERFACE)
+
+typedef mysql_rwlock_t tokudb_rwlock_t;
+#define tokudb_rwlock_init(K, RW, A)  mysql_rwlock_init(K, RW)
+#define tokudb_rwlock_rdlock(RW)      mysql_rwlock_rdlock(RW)
+#define tokudb_rwlock_tryrdlock(RW)   mysql_rwlock_tryrdlock(RW)
+#define tokudb_rwlock_wrlock(RW)      mysql_rwlock_wrlock(RW)
+#define tokudb_rwlock_trywrlock(RW)   mysql_rwlock_trywrlock(RW)
+#define tokudb_rwlock_unlock(RW)      mysql_rwlock_unlock(RW)
+#define tokudb_rwlock_destroy(RW)     mysql_rwlock_destroy(RW)
+
+#else
+
+typedef rw_lock_t tokudb_rwlock_t;
+#define tokudb_rwlock_init(K, RW, A)  my_rwlock_init(RW, A)
+#define tokudb_rwlock_rdlock(RW)      rw_rdlock(RW)
+#define tokudb_rwlock_tryrdlock(RW)   rw_tryrdlock(RW)
+#define tokudb_rwlock_wrlock(RW)      rw_rwlock(RW)
+#define tokudb_rwlock_trywrlock(RW)   rw_trywrlock(RW)
+#define tokudb_rwlock_unlock(RW)     rw_unlock(RW)
+#define tokudb_rwlock_destroy(RW)     rwlock_destroy(RW)
+
+#endif
+
+
+
+#if defined(HAVE_PSI_MUTEX_INTERFACE)
+
+typedef mysql_mutex_t tokudb_mutex_t;
+#define tokudb_pthread_mutex_init(K, M, A) mysql_mutex_init(K, M, A)
+#define tokudb_pthread_mutex_destroy(M)    mysql_mutex_destroy(M)
+#define tokudb_pthread_mutex_lock(M)       mysql_mutex_lock(M)
+#define tokudb_pthread_mutex_unlock(M)     mysql_mutex_unlock(M)
+
+#else
+
+typedef pthread_mutex_t tokudb_mutex_t;
+#define tokudb_pthread_mutex_init(K, M, A) inline_tokudb_pthread_mutex_init(M, A)
+#define tokudb_pthread_mutex_destroy(M)    inline_tokudb_pthread_mutex_destroy(M)
+#define tokudb_pthread_mutex_lock(M)       inline_tokudb_pthread_mutex_lock(M)
+#define tokudb_pthread_mutex_unlock(M)     inline_tokudb_pthread_mutex_unlock(M)
+
+static inline void inline_tokudb_pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr) {
     int r = pthread_mutex_init(mutex, attr);
     assert(r == 0);
 }
 
-static inline void tokudb_pthread_mutex_destroy(pthread_mutex_t *mutex) {
+static inline void inline_tokudb_pthread_mutex_destroy(pthread_mutex_t *mutex) {
     int r = pthread_mutex_destroy(mutex);
     assert(r == 0);
 }
 
-static inline void tokudb_pthread_mutex_lock(pthread_mutex_t *mutex) {
+static inline void inline_tokudb_pthread_mutex_lock(pthread_mutex_t *mutex) {
     int r = pthread_mutex_lock(mutex);
     assert(r == 0);
 }
 
-static inline void tokudb_pthread_mutex_unlock(pthread_mutex_t *mutex) {
+static inline void inline_tokudb_pthread_mutex_unlock(pthread_mutex_t *mutex) {
     int r = pthread_mutex_unlock(mutex);
     assert(r == 0);
 }
+
+#endif
 
 static inline void tokudb_pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr) {
     int r = pthread_cond_init(cond, attr);
@@ -525,8 +569,12 @@ static inline void tokudb_pthread_cond_destroy(pthread_cond_t *cond) {
     assert(r == 0);
 }
 
-static inline void tokudb_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
+static inline void tokudb_pthread_cond_wait(pthread_cond_t *cond, tokudb_mutex_t *mutex) {
+#ifdef HAVE_PSI_MUTEX_INTERFACE
+    int r = my_cond_wait(cond, &mutex->m_mutex);
+#else
     int r = pthread_cond_wait(cond, mutex);
+#endif
     assert(r == 0);
 }
 

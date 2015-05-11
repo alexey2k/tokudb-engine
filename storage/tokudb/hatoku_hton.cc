@@ -121,165 +121,23 @@ PATENT RIGHTS GRANT:
 
 #define TOKU_METADB_NAME "tokudb_meta"
 
-typedef unsigned int    pfs_key_t; 
+extern pfs_key_t ha_tokudb_mutex_key;
+extern pfs_key_t num_DBs_lock_key;
 
-extern pfs_key_t txn_manager_lock_mutex_key;
-extern pfs_key_t kibbutz_mutex_key;
-extern pfs_key_t ft_ref_lock_mutex_key;
-extern pfs_key_t txn_lock_mutex_key;
-extern pfs_key_t txn_state_lock_mutex_key;
-extern pfs_key_t rollback_log_node_cache_mutex_key;
-extern pfs_key_t txn_child_manager_mutex_key;
-extern pfs_key_t block_allocator_trace_lock_mutex_key;
-extern pfs_key_t block_table_mutex_key;
-extern pfs_key_t ft_open_close_lock_mutex_key;
-extern pfs_key_t bjm_jobs_lock_mutex_key;
-extern pfs_key_t checkpoint_safe_mutex_key;
-extern pfs_key_t bfs_mutex_key;
-extern pfs_key_t loader_error_mutex_key;
-extern pfs_key_t loader_bl_mutex_key;
-extern pfs_key_t loader_fi_lock_mutex_key;
-extern pfs_key_t loader_out_mutex_key;
-extern pfs_key_t result_output_condition_lock_mutex_key;
-extern pfs_key_t manager_mutex_key;
-extern pfs_key_t manager_escalation_mutex_key;
-extern pfs_key_t manger_escalator_mutex_key;
-extern pfs_key_t locktree_request_info_mutex_key;
-extern pfs_key_t indexer_i_indexer_lock_mutex_key;
-extern pfs_key_t indexer_i_indexer_estimate_lock_mutex_key;
-extern pfs_key_t db_txn_struct_i_txn_mutex_key;
-extern pfs_key_t minicron_p_mutex_key;
-extern pfs_key_t queue_result_mutex_key;
-extern pfs_key_t tpool_lock_mutex_key;
-extern pfs_key_t cachetable_m_mutex_key;
-extern pfs_key_t cachetable_ev_thread_lock_mutex_key;
-
-extern pfs_key_t result_state_cond_key;
-extern pfs_key_t bjm_jobs_wait_key;  
-extern pfs_key_t cachetable_p_refcount_wait_key;
-extern pfs_key_t cachetable_m_flow_control_cond_key;
-extern pfs_key_t cachetable_m_ev_thread_cond_key;
-extern pfs_key_t bfs_cond_key;
-extern pfs_key_t result_output_condition_key;
-extern pfs_key_t manager_m_escalator_done_key;
-extern pfs_key_t lock_request_m_wait_cond_key;
- 
-
-extern pfs_key_t queue_result_cond_key;
-
-extern pfs_key_t ws_worker_wait_key;
-extern pfs_key_t workset_lock_mutex_key;
-
-extern pfs_key_t rwlock_wait_read_key;  
-extern pfs_key_t rwlock_wait_write_key;
-extern pfs_key_t rwlock_cond_key;
-
-
-extern pfs_key_t tp_thread_wait_key;
-extern pfs_key_t tp_pool_wait_free_key;
-extern pfs_key_t frwlock_m_wait_read_key;
-extern pfs_key_t kibbutz_k_cond_key;
-
-extern pfs_key_t multi_operation_lock_key;
-extern pfs_key_t low_priority_multi_operation_lock_key;
-extern pfs_key_t cachetable_m_list_lock_key;   
-extern pfs_key_t cachetable_m_pending_lock_expensive_key;
-extern pfs_key_t cachetable_m_pending_lock_cheap_key;
-extern pfs_key_t cachetable_m_lock_key;
-extern pfs_key_t result_i_open_dbs_rwlock_key;
-
-extern pfs_key_t log_internal_lock_mutex_key;
-extern pfs_key_t probe_mutex_1_key;
-extern pfs_key_t probe_mutex_2_key;
-extern pfs_key_t probe_mutex_3_key;
-extern pfs_key_t probe_mutex_4_key;
-
-//extern pfs_key_t treenode_mutex_key;
-//extern pfs_key_t fmutex_cond_key;
-//extern pfs_key_t circular_buffer_m_lock_mutex_key;
-//extern pfs_key_t circular_buffer_m_push_cond_key;
-//extern pfs_key_t circular_buffer_m_pop_cond_key; 
+pfs_key_t tokudb_map_mutex_key;
+pfs_key_t tokudb_mutex_key;
+pfs_key_t tokudb_hton_initialized_lock_key;
 
 static PSI_mutex_info   all_tokudb_mutexes[] = {
-        {&txn_manager_lock_mutex_key, "txn_manager_lock_mutex", 0},
-        {&kibbutz_mutex_key, "kibbutz_mutex", 0},
-        {&ft_ref_lock_mutex_key, "ft_ref_lock_mutex", 0},
-        {&txn_lock_mutex_key, "txn_lock_mutex", 0},
-        {&txn_state_lock_mutex_key, "txn_state_lock_mutex", 0},
-        {&rollback_log_node_cache_mutex_key, "rollback_log_node_cache_mutex", 0},
-        {&txn_child_manager_mutex_key, "txn_child_manager_mutex", 0},
-        {&block_allocator_trace_lock_mutex_key, "block_allocator_trace_lock_mutex", 0},
-        {&block_table_mutex_key, "block_table_mutex", 0},
-        {&workset_lock_mutex_key, "workset_lock_mutex", 0},        
-        {&log_internal_lock_mutex_key, "log_internal_lock_mutex", 0},        
-#if 0
-        {&circular_buffer_m_lock_mutex_key, "circular_buffer_m_lock_mutex", 0},
-        {&treenode_mutex_key, "treenode_mutex", 0},
-#endif
-        {&ft_open_close_lock_mutex_key, "ft_open_close_lock_mutex", 0},
-        {&bjm_jobs_lock_mutex_key, "bjm_jobs_lock_mutex", 0},
-        {&checkpoint_safe_mutex_key, "checkpoint_safe_mutex", 0},
-        {&bfs_mutex_key, "bfs_mutex", 0},
-        {&loader_error_mutex_key, "loader_error_mutex", 0},
-        {&loader_bl_mutex_key, "loader_bl_mutex", 0},
-        {&loader_fi_lock_mutex_key, "loader_fi_lock_mutex", 0},
-        {&loader_out_mutex_key, "loader_out_mutex", 0},
-        {&result_output_condition_lock_mutex_key,"result_output_condition_lock_mutex", 0},
-        {&manager_mutex_key, "manager_mutex", 0},
-        {&manager_escalation_mutex_key, "manager_escalation_mutex", 0},
-        {&manger_escalator_mutex_key, "manager_escalator_mutex", 0},   
-        {&locktree_request_info_mutex_key, "locktree_request_info_mutex", 0},
-        {&indexer_i_indexer_lock_mutex_key, "indexer_i_indexer_lock_mutex", 0},
-        {&indexer_i_indexer_estimate_lock_mutex_key,   "indexer_i_indexer_estimate_lock_mutex", 0},
-        {&db_txn_struct_i_txn_mutex_key, "db_txn_struct_i_txn_mutex", 0},
-        {&minicron_p_mutex_key, "minicron_p_mutex", 0},
-        {&queue_result_mutex_key, "queue_result_mutex", 0},
-        {&tpool_lock_mutex_key, "tpool_lock__mutex", 0},   
-        {&cachetable_m_mutex_key, "cachetable_m_mutex", 0},
-        {&cachetable_ev_thread_lock_mutex_key, "cachetable_ev_thread_lock_mutex", 0},
-        {&probe_mutex_1_key,"probe_mutex_1",0},
-        {&probe_mutex_2_key,"probe_mutex_2",0},        
-        {&probe_mutex_3_key,"probe_mutex_3",0},
-        {&probe_mutex_4_key,"probe_mutex_4",0}
-};
-
-  
-static PSI_cond_info all_tokudb_conds[] = {
-            {&result_state_cond_key,"result_state_cond",0},
-            {&ws_worker_wait_key,"ws_worker_wait",0},
-            {&bjm_jobs_wait_key,"bjm_jobs_wait",0},  
-            {&cachetable_p_refcount_wait_key,"cachetable_p_refcount_wait",0},
-            {&cachetable_m_flow_control_cond_key,"cachetable_m_flow_control_cond",0},
-            {&cachetable_m_ev_thread_cond_key,"cachetable_m_ev_thread_cond",0},
-            {&bfs_cond_key,"bfs_cond",0},
-            {&result_output_condition_key,"result_output_condition",0},
-            {&manager_m_escalator_done_key,"manager_m_escalator_done",0},
-            {&lock_request_m_wait_cond_key,"lock_request_m_wait_cond",0},
-#if 0
-            {&circular_buffer_m_push_cond_key,"circular_buffer_m_push_cond",0},
-            {&circular_buffer_m_pop_cond_key,"circular_buffer_m_pop_cond",0},  
-            {&fmutex_cond_key,"fmutex_cond",0},
-#endif
-            {&queue_result_cond_key,"queue_result_cond",0},
-            {&rwlock_wait_read_key,"rwlock_wait_read",0},  
-            {&rwlock_wait_write_key,"rwlock_wait_write",0},
-            {&rwlock_cond_key,"rwlock_cond",0},
-            {&tp_thread_wait_key,"tp_thread_wait",0},
-            {&tp_pool_wait_free_key,"tp_pool_wait_free",0},
-            {&frwlock_m_wait_read_key,"frwlock_m_wait_read",0},
-            {&kibbutz_k_cond_key,"kibbutz_k_cond",0}
+        {&tokudb_mutex_key, "tokudb_mutex", 0},
+        {&tokudb_map_mutex_key, "tokudb_map_mutex", 0},
+        {&ha_tokudb_mutex_key, "ha_tokudb_mutex", 0},
 };
 
 static PSI_rwlock_info all_tokudb_rwlocks[] = {
-            {&multi_operation_lock_key,"multi_operation_lock",0},
-            {&low_priority_multi_operation_lock_key,"low_priority_multi_operation_lock",0},
-            {&cachetable_m_list_lock_key,"cachetable_m_list_lock",0},   
-            {&cachetable_m_pending_lock_expensive_key,"cachetable_m_pending_lock_expensive",0},
-            {&cachetable_m_pending_lock_cheap_key,"cachetable_m_pending_lock_cheap",0},
-            {&cachetable_m_lock_key,"cachetable_m_lock_key",0},
-            {&result_i_open_dbs_rwlock_key,"result_i_open_dbs_rwlock",0}
+        {&tokudb_hton_initialized_lock_key, "tokudb_hton_initialized_lock", 0},
+        {&num_DBs_lock_key, "num_DBs_lock", 0},
 };
-
 
 typedef struct savepoint_info {
     DB_TXN* txn;
@@ -342,10 +200,10 @@ char *tokudb_data_dir;
 ulong tokudb_debug;
 DB_ENV *db_env;
 HASH tokudb_open_tables;
-pthread_mutex_t tokudb_mutex;
+tokudb_mutex_t tokudb_mutex;
 
 #if TOKU_THDVAR_MEMALLOC_BUG
-static pthread_mutex_t tokudb_map_mutex;
+tokudb_mutex_t tokudb_map_mutex;
 static TREE tokudb_map;
 struct tokudb_map_pair {
     THD *thd;
@@ -447,16 +305,16 @@ extern "C" {
 // use constructor and destructor functions to create and destroy
 // the lock before and after main(), respectively.
 static int tokudb_hton_initialized;
-static rw_lock_t tokudb_hton_initialized_lock;
+static tokudb_rwlock_t tokudb_hton_initialized_lock;
 
 static void create_tokudb_hton_intialized_lock(void)  __attribute__((constructor));
 static void create_tokudb_hton_intialized_lock(void) {
-    my_rwlock_init(&tokudb_hton_initialized_lock, 0);
+    tokudb_rwlock_init(tokudb_hton_initialized_lock_key, &tokudb_hton_initialized_lock, 0);
 }
 
 static void destroy_tokudb_hton_initialized_lock(void) __attribute__((destructor));
 static void destroy_tokudb_hton_initialized_lock(void) {
-    rwlock_destroy(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_destroy(&tokudb_hton_initialized_lock);
 }
 
 static SHOW_VAR *toku_global_status_variables = NULL;
@@ -509,7 +367,7 @@ static int tokudb_init_func(void *p) {
     int r;
 
     // 3938: lock the handlerton's initialized status flag for writing
-    r = rw_wrlock(&tokudb_hton_initialized_lock);
+    r = tokudb_rwlock_wrlock(&tokudb_hton_initialized_lock);
     assert(r == 0);
 
     db_env = NULL;
@@ -530,19 +388,16 @@ static int tokudb_init_func(void *p) {
 
 #ifdef HAVE_PSI_INTERFACE
     /* Register TokuDB mutex keys with MySQL performance schema */
-    int     count;
+    int count;
 
     count = array_elements(all_tokudb_mutexes);
     mysql_mutex_register("tokudb", all_tokudb_mutexes, count);
-    
-//    count = array_elements(all_tokudb_rwlocks);
-//    mysql_rwlock_register("tokudb", all_tokudb_rwlocks, count);    
 
-//    count = array_elements(all_tokudb_conds);
-//    mysql_cond_register("tokudb", all_tokudb_conds, count);
+    count = array_elements(all_tokudb_rwlocks);
+    mysql_rwlock_register("tokudb", all_tokudb_rwlocks, count);    
 # endif /* HAVE_PSI_INTERFACE */
 
-    tokudb_pthread_mutex_init(&tokudb_mutex, MY_MUTEX_INIT_FAST);
+    tokudb_pthread_mutex_init(tokudb_mutex_key, &tokudb_mutex, MY_MUTEX_INIT_FAST);
     (void) my_hash_init(&tokudb_open_tables, table_alias_charset, 32, 0, 0, (my_hash_get_key) tokudb_get_key, 0, 0);
 
     tokudb_hton->state = SHOW_OPTION_YES;
@@ -748,13 +603,13 @@ static int tokudb_init_func(void *p) {
     tokudb_primary_key_bytes_inserted = create_partitioned_counter();
 
 #if TOKU_THDVAR_MEMALLOC_BUG
-    tokudb_pthread_mutex_init(&tokudb_map_mutex, MY_MUTEX_INIT_FAST);
+    tokudb_pthread_mutex_init(tokudb_map_mutex_key, &tokudb_map_mutex, MY_MUTEX_INIT_FAST);
     init_tree(&tokudb_map, 0, 0, 0, tokudb_map_pair_cmp, true, NULL, NULL);
 #endif
 
     //3938: succeeded, set the init status flag and unlock
     tokudb_hton_initialized = 1;
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     DBUG_RETURN(false);
 
 error:
@@ -766,7 +621,7 @@ error:
 
     // 3938: failed to initialized, drop the flag and lock
     tokudb_hton_initialized = 0;
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     DBUG_RETURN(true);
 }
 
@@ -793,7 +648,7 @@ int tokudb_end(handlerton * hton, ha_panic_function type) {
     // initialized. grab a writer lock for the duration of the
     // call, so we can drop the flag and destroy the mutexes
     // in isolation.
-    rw_wrlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_wrlock(&tokudb_hton_initialized_lock);
     assert(tokudb_hton_initialized);
 
     if (db_env) {
@@ -843,7 +698,7 @@ int tokudb_end(handlerton * hton, ha_panic_function type) {
 
     // 3938: drop the initialized flag and unlock
     tokudb_hton_initialized = 0;
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
 
     TOKUDB_DBUG_RETURN(error);
 }
@@ -1766,7 +1621,7 @@ static int tokudb_file_map_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) 
     int error;
     TABLE *table = tables->table;
 
-    rw_rdlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
         error = ER_PLUGIN_IS_NOT_LOADED;
@@ -1777,7 +1632,7 @@ static int tokudb_file_map_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) 
             my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     TOKUDB_DBUG_RETURN(error);
 }
 
@@ -1916,7 +1771,7 @@ static int tokudb_fractal_tree_info_fill_table(THD *thd, TABLE_LIST *tables, CON
 
     // 3938: Get a read lock on the status flag, since we must
     // read it before safely proceeding
-    rw_rdlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
         error = ER_PLUGIN_IS_NOT_LOADED;
@@ -1928,7 +1783,7 @@ static int tokudb_fractal_tree_info_fill_table(THD *thd, TABLE_LIST *tables, CON
     }
 
     //3938: unlock the status flag lock
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     TOKUDB_DBUG_RETURN(error);
 }
 
@@ -2131,7 +1986,7 @@ static int tokudb_fractal_tree_block_map_fill_table(THD *thd, TABLE_LIST *tables
 
     // 3938: Get a read lock on the status flag, since we must
     // read it before safely proceeding
-    rw_rdlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
         error = ER_PLUGIN_IS_NOT_LOADED;
@@ -2143,7 +1998,7 @@ static int tokudb_fractal_tree_block_map_fill_table(THD *thd, TABLE_LIST *tables
     }
 
     //3938: unlock the status flag lock
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     TOKUDB_DBUG_RETURN(error);
 }
 
@@ -2333,7 +2188,7 @@ static int tokudb_trx_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) {
     TOKUDB_DBUG_ENTER("");
     int error;
     
-    rw_rdlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
         error = ER_PLUGIN_IS_NOT_LOADED;
@@ -2345,7 +2200,7 @@ static int tokudb_trx_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) {
             my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     TOKUDB_DBUG_RETURN(error);
 }
 
@@ -2420,7 +2275,7 @@ static int tokudb_lock_waits_fill_table(THD *thd, TABLE_LIST *tables, COND *cond
     TOKUDB_DBUG_ENTER("");
     int error;
     
-    rw_rdlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
         error = ER_PLUGIN_IS_NOT_LOADED;
@@ -2432,7 +2287,7 @@ static int tokudb_lock_waits_fill_table(THD *thd, TABLE_LIST *tables, COND *cond
             my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     TOKUDB_DBUG_RETURN(error);
 }
 
@@ -2513,7 +2368,7 @@ static int tokudb_locks_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) {
     TOKUDB_DBUG_ENTER("");
     int error;
     
-    rw_rdlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_rdlock(&tokudb_hton_initialized_lock);
 
     if (!tokudb_hton_initialized) {
         error = ER_PLUGIN_IS_NOT_LOADED;
@@ -2525,7 +2380,7 @@ static int tokudb_locks_fill_table(THD *thd, TABLE_LIST *tables, COND *cond) {
             my_error(ER_GET_ERRNO, MYF(0), error, tokudb_hton_name);
     }
 
-    rw_unlock(&tokudb_hton_initialized_lock);
+    tokudb_rwlock_unlock(&tokudb_hton_initialized_lock);
     TOKUDB_DBUG_RETURN(error);
 }
 

@@ -124,7 +124,7 @@ public:
 public:
     char *table_name;
     uint table_name_length, use_count;
-    pthread_mutex_t mutex;
+    tokudb_mutex_t mutex;
     THR_LOCK lock;
 
     ulonglong auto_ident;
@@ -149,7 +149,7 @@ public:
     // key is hidden
     //
     DB *key_file[MAX_KEY +1];
-    rw_lock_t key_file_lock;
+    tokudb_rwlock_t key_file_lock;
     uint status, version, capabilities;
     uint ref_length;
     //
@@ -177,7 +177,7 @@ public:
 
     bool has_unique_keys;
     bool replace_into_fast;
-    rw_lock_t num_DBs_lock;
+    tokudb_rwlock_t num_DBs_lock;
     uint32_t num_DBs;
 
     pthread_cond_t m_openclose_cond;

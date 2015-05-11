@@ -97,6 +97,8 @@ extern handlerton *tokudb_hton;
 
 extern DB_ENV *db_env;
 
+typedef unsigned int    pfs_key_t;
+
 enum srv_row_format_enum {
     SRV_ROW_FORMAT_UNCOMPRESSED = 0,
     SRV_ROW_FORMAT_ZLIB = 1,
@@ -548,7 +550,7 @@ static MYSQL_THDVAR_DOUBLE(optimize_index_fraction, 0, "optimize index fraction 
 static MYSQL_THDVAR_ULONGLONG(optimize_throttle, 0, "optimize throttle (default no throttle)", NULL /*check*/, NULL /*update*/, 0 /*def*/, 0 /*min*/, ~0ULL /*max*/, 1);
 
 extern HASH tokudb_open_tables;
-extern pthread_mutex_t tokudb_mutex;
+extern tokudb_mutex_t tokudb_mutex;
 extern uint32_t tokudb_write_status_frequency;
 extern uint32_t tokudb_read_status_frequency;
 

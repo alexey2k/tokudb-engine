@@ -141,6 +141,9 @@ static inline uint get_key_parts(const KEY *key);
 #include "hatoku_hton.h"
 #include <mysql/plugin.h>
 
+pfs_key_t ha_tokudb_mutex_key;
+pfs_key_t num_DBs_lock_key;
+
 static const char *ha_tokudb_exts[] = {
     ha_tokudb_ext,
     NullS
@@ -231,8 +234,8 @@ static void free_key_and_col_info (KEY_AND_COL_INFO* kc_info) {
 void TOKUDB_SHARE::init(void) {
     use_count = 0;
     thr_lock_init(&lock);
-    tokudb_pthread_mutex_init(&mutex, MY_MUTEX_INIT_FAST);
-    my_rwlock_init(&num_DBs_lock, 0);
+    tokudb_pthread_mutex_init(ha_tokudb_mutex_key, &mutex, MY_MUTEX_INIT_FAST);
+    tokudb_rwlock_init(num_DBs_lock_key, &num_DBs_lock, 0);
     tokudb_pthread_cond_init(&m_openclose_cond, NULL);
     m_state = CLOSED;
 }
@@ -241,7 +244,7 @@ void TOKUDB_SHARE::destroy(void) {
     assert(m_state == CLOSED);
     thr_lock_delete(&lock);
     tokudb_pthread_mutex_destroy(&mutex);
-    rwlock_destroy(&num_DBs_lock);
+    tokudb_rwlock_destroy(&num_DBs_lock);
     tokudb_pthread_cond_destroy(&m_openclose_cond);
     tokudb_my_free(rec_per_key);
     rec_per_key = NULL;
@@ -3230,7 +3233,7 @@ void ha_tokudb::start_bulk_insert(ha_rows rows) {
     ai_metadata_update_required = false;
     abort_loader = false;
     
-    rw_rdlock(&share->num_DBs_lock);
+    tokudb_rwlock_rdlock(&share->num_DBs_lock);
     uint curr_num_DBs = table->s->keys + tokudb_test(hidden_primary_key);
     num_DBs_locked_in_bulk = true;
     lock_count = 0;
@@ -3349,7 +3352,7 @@ int ha_tokudb::end_bulk_insert(bool abort) {
 
 cleanup:
     if (num_DBs_locked_in_bulk) {
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
     }
     num_DBs_locked_in_bulk = false;
     lock_count = 0;
@@ -3890,14 +3893,14 @@ int ha_tokudb::write_row(uchar * record) {
     // grab reader lock on numDBs_lock
     //
     if (!num_DBs_locked_in_bulk) {
-        rw_rdlock(&share->num_DBs_lock);
+        tokudb_rwlock_rdlock(&share->num_DBs_lock);
         num_DBs_locked = true;
     }
     else {
         lock_count++;
         if (lock_count >= 2000) {
-            rw_unlock(&share->num_DBs_lock);
-            rw_rdlock(&share->num_DBs_lock);
+            tokudb_rwlock_unlock(&share->num_DBs_lock);
+            tokudb_rwlock_rdlock(&share->num_DBs_lock);
             lock_count = 0;
         }
     }
@@ -3983,7 +3986,7 @@ int ha_tokudb::write_row(uchar * record) {
     }
 cleanup:
     if (num_DBs_locked) {
-       rw_unlock(&share->num_DBs_lock);
+       tokudb_rwlock_unlock(&share->num_DBs_lock);
     }
     if (error == DB_KEYEXIST) {
         error = HA_ERR_FOUND_DUPP_KEY;
@@ -4074,7 +4077,7 @@ int ha_tokudb::update_row(const uchar * old_row, uchar * new_row) {
     //
     bool num_DBs_locked = false;
     if (!num_DBs_locked_in_bulk) {
-        rw_rdlock(&share->num_DBs_lock);
+        tokudb_rwlock_rdlock(&share->num_DBs_lock);
         num_DBs_locked = true;
     }
     curr_num_DBs = share->num_DBs;
@@ -4172,7 +4175,7 @@ int ha_tokudb::update_row(const uchar * old_row, uchar * new_row) {
 
 cleanup:
     if (num_DBs_locked) {
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
     }
     if (error == DB_KEYEXIST) {
         error = HA_ERR_FOUND_DUPP_KEY;
@@ -4215,7 +4218,7 @@ int ha_tokudb::delete_row(const uchar * record) {
     //
     bool num_DBs_locked = false;
     if (!num_DBs_locked_in_bulk) {
-        rw_rdlock(&share->num_DBs_lock);
+        tokudb_rwlock_rdlock(&share->num_DBs_lock);
         num_DBs_locked = true;
     }
     curr_num_DBs = share->num_DBs;
@@ -4257,7 +4260,7 @@ int ha_tokudb::delete_row(const uchar * record) {
     }
 cleanup:
     if (num_DBs_locked) {
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
     }
     TOKUDB_HANDLER_DBUG_RETURN(error);
 }
@@ -6024,7 +6027,7 @@ int ha_tokudb::acquire_table_lock (DB_TXN* trans, TABLE_LOCK_TYPE lt) {
     TOKUDB_HANDLER_DBUG_ENTER("%p %s", trans, lt == lock_read ? "r" : "w");
     int error = ENOSYS;
     if (!num_DBs_locked_in_bulk) {
-        rw_rdlock(&share->num_DBs_lock);
+        tokudb_rwlock_rdlock(&share->num_DBs_lock);
     }
     uint curr_num_DBs = share->num_DBs;
     if (lt == lock_read) {
@@ -6051,7 +6054,7 @@ int ha_tokudb::acquire_table_lock (DB_TXN* trans, TABLE_LOCK_TYPE lt) {
     error = 0;
 cleanup:
     if (!num_DBs_locked_in_bulk) {
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
     }
     TOKUDB_HANDLER_DBUG_RETURN(error);
 }
@@ -6354,11 +6357,11 @@ THR_LOCK_DATA **ha_tokudb::store_lock(THD * thd, THR_LOCK_DATA ** to, enum thr_l
         if (!thd->in_lock_tables) {
             if (sql_command == SQLCOM_CREATE_INDEX && get_create_index_online(thd)) {
                 // hot indexing
-                rw_rdlock(&share->num_DBs_lock);
+                tokudb_rwlock_rdlock(&share->num_DBs_lock);
                 if (share->num_DBs == (table->s->keys + tokudb_test(hidden_primary_key))) {
                     lock_type = TL_WRITE_ALLOW_WRITE;
                 }
-                rw_unlock(&share->num_DBs_lock);
+                tokudb_rwlock_unlock(&share->num_DBs_lock);
             } else if ((lock_type >= TL_WRITE_CONCURRENT_INSERT && lock_type <= TL_WRITE) && 
                        sql_command != SQLCOM_TRUNCATE && !thd_tablespace_op(thd)) {
                 // allow concurrent writes
@@ -7548,7 +7551,7 @@ int ha_tokudb::tokudb_add_index(
         }
     }
     
-    rw_wrlock(&share->num_DBs_lock);
+    tokudb_rwlock_wrlock(&share->num_DBs_lock);
     rw_lock_taken = true;
     //
     // open all the DB files and set the appropriate variables in share
@@ -7622,7 +7625,7 @@ int ha_tokudb::tokudb_add_index(
         error = indexer->set_error_callback(indexer, loader_ai_err_fun, &lc);
         if (error) { goto cleanup; }
 
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
         rw_lock_taken = false;
         
 #ifdef HA_TOKUDB_HAS_THD_PROGRESS
@@ -7635,15 +7638,15 @@ int ha_tokudb::tokudb_add_index(
 
         if (error) { goto cleanup; }
 
-        rw_wrlock(&share->num_DBs_lock);
+        tokudb_rwlock_wrlock(&share->num_DBs_lock);
         error = indexer->close(indexer);
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
         if (error) { goto cleanup; }
         indexer = NULL;
     }
     else {
         DBUG_ASSERT(table->mdl_ticket->get_type() >= MDL_SHARED_NO_WRITE);
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
         rw_lock_taken = false;
         prelocked_right_range_size = 0;
         prelocked_left_range_size = 0;
@@ -7814,7 +7817,7 @@ cleanup:
     thd_progress_end(thd);
 #endif
     if (rw_lock_taken) {
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
         rw_lock_taken = false;
     }
     if (tmp_cursor) {            
@@ -7830,9 +7833,9 @@ cleanup:
     if (indexer != NULL) {
         sprintf(status_msg, "aborting creation of indexes.");
         thd_proc_info(thd, status_msg);
-        rw_wrlock(&share->num_DBs_lock);
+        tokudb_rwlock_wrlock(&share->num_DBs_lock);
         indexer->abort(indexer);
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
     }
     if (error == DB_LOCK_NOTGRANTED && ((tokudb_debug & TOKUDB_DEBUG_HIDE_DDL_LOCK_ERRORS) == 0)) {
         sql_print_error("Could not add indexes to table %s because \
@@ -7856,7 +7859,7 @@ void ha_tokudb::restore_add_index(TABLE* table_arg, uint num_of_keys, bool incre
     // so that there is not a window 
     //
     if (incremented_numDBs) {
-        rw_wrlock(&share->num_DBs_lock);
+        tokudb_rwlock_wrlock(&share->num_DBs_lock);
         share->num_DBs--;
     }
     if (modified_DBs) {
@@ -7877,7 +7880,7 @@ void ha_tokudb::restore_add_index(TABLE* table_arg, uint num_of_keys, bool incre
         }
     }
     if (incremented_numDBs) {
-        rw_unlock(&share->num_DBs_lock);
+        tokudb_rwlock_unlock(&share->num_DBs_lock);
     }
 }
 
