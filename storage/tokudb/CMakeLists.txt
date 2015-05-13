@@ -75,6 +75,10 @@ endmacro(append_cflags_if_supported)
 set_cflags_if_supported(-Wno-missing-field-initializers)
 append_cflags_if_supported(-Wno-vla)
 
+#LTTNG
+find_path(LTTNG_UST_INCLUDE_DIR lttng/tracepoint.h)
+find_library(LTTNG_UST_LIBRARY NAMES lttng-ust)
+
 ADD_SUBDIRECTORY(ft-index)
 
 INCLUDE_DIRECTORIES(ft-index)
@@ -87,6 +91,6 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/ft-index/portability)
 SET(TOKUDB_PLUGIN_DYNAMIC "ha_tokudb")
 SET(TOKUDB_SOURCES ha_tokudb.cc)
 MYSQL_ADD_PLUGIN(tokudb ${TOKUDB_SOURCES} STORAGE_ENGINE MODULE_ONLY
-    LINK_LIBRARIES tokufractaltree_static tokuportability_static ${ZLIB_LIBRARY} stdc++)
+    LINK_LIBRARIES tokufractaltree_static tokuportability_static ${ZLIB_LIBRARY} stdc++ ${LTTNG_UST_LIBRARY})
 SET_PROPERTY(TARGET tokudb APPEND PROPERTY LINK_FLAGS_RELEASE "-flto -fuse-linker-plugin")
 SET_PROPERTY(TARGET tokudb APPEND PROPERTY LINK_FLAGS_RELWITHDEBINFO "-flto -fuse-linker-plugin")
